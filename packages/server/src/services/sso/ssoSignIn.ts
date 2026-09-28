@@ -171,7 +171,7 @@ async function signInOnce(input: {
       } else {
         if (!input.legalAcceptance) throw new RefusedError("legal_acceptance_required");
         try {
-          assertRegistrationEnabled();
+          assertRegistrationEnabled(email);
         } catch {
           throw new RefusedError("registration_closed");
         }

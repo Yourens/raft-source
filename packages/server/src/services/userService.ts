@@ -372,6 +372,7 @@ export async function createUser(
 ) {
   const db = getDb();
   const normalizedEmail = normalizeEmail(email);
+  assertRegistrationEnabled(normalizedEmail);
 
   if (!options.deferProfileSetup && !name) {
     throw new Error("Username is required");
@@ -1141,7 +1142,7 @@ export async function findExistingSocialLoginUser(profile: SocialAuthProfile): P
     throw new SocialEmailConflictError(existingEmailUser.id, profile.provider);
   }
 
-  assertRegistrationEnabled();
+  assertRegistrationEnabled(normalizedEmail);
   return null;
 }
 
@@ -1156,7 +1157,7 @@ export async function createSocialUser(
   assertUsableSocialProfile(profile);
   const normalizedEmail = normalizeEmail(profile.email);
   const accepted = legalAcceptanceService.requireCurrentLegalAcceptance(legalAcceptance);
-  assertRegistrationEnabled();
+  assertRegistrationEnabled(normalizedEmail);
   const [existingEmailUser] = await db.select({ id: users.id }).from(users).where(eq(users.email, normalizedEmail));
   if (existingEmailUser) {
     throw new Error(`An account with this email already exists. Sign in with email and password first, then connect ${getProviderLabel(profile.provider)} in Settings.`);
@@ -1171,7 +1172,7 @@ export async function createSocialUser(
           throw new Error(`An account with this email already exists. Sign in with email and password first, then connect ${getProviderLabel(profile.provider)} in Settings.`);
         }
 
-        assertRegistrationEnabled();
+        assertRegistrationEnabled(normalizedEmail);
 
         const providerDisplayName = profile.displayName?.trim() || null;
         const nameSeed = providerDisplayName || normalizedEmail.split("@")[0] || "user";
@@ -1245,7 +1246,7 @@ export async function createSsoUserInTransaction(
 ): Promise<{ id: string; email: string }> {
   const normalizedEmail = normalizeEmail(input.email);
   const accepted = legalAcceptanceService.requireCurrentLegalAcceptance(input.legalAcceptance);
-  assertRegistrationEnabled();
+  assertRegistrationEnabled(normalizedEmail);
   const displayName = input.displayName?.trim() || null;
   const suggestedHandle = await generateAvailableUserName(displayName || normalizedEmail.split("@")[0] || "user", tx);
   const [created] = await tx.insert(users).values({
