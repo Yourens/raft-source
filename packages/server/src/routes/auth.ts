@@ -562,6 +562,11 @@ authRouter.post("/register", async (req, res) => {
 
   try {
     const { email, password, name, stagingSelfAccountCapability } = body;
+    const emailBlockedReason = getRegistrationBlockedReason(email);
+    if (emailBlockedReason) {
+      res.status(403).json({ error: emailBlockedReason });
+      return;
+    }
     if (stagingSelfAccountCapability && (process.env.SLOCK_RELEASE_BRANCH !== "staging" || !/@mail\.build$/i.test(email))) {
       res.status(403).json({ error: "Staging self-account registration is unavailable" });
       return;
