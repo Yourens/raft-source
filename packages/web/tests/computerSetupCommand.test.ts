@@ -12,6 +12,8 @@ import {
   LEGACY_DEFAULT_COMPUTER_SERVER_URL,
   STAGING_COMPUTER_SERVER_URL,
   windowsComputerInstallCommand,
+  WINDOWS_PATHEXT_BIN_FIX,
+  withWindowsPathextFix,
 } from "../src/utils/computerSetupCommand";
 
 // Non-prod (staging / slockdev) commands share a per-server isolated home/bin
@@ -357,4 +359,25 @@ test("Windows daemon connect command uses npx.cmd and no shell comment", () => {
     }),
     "npx.cmd @botiverse/raft-daemon@latest --server-url https://api.raft.build --api-key sk_machine_test",
   );
+});
+
+test("Self-hosted build (no deployment env) passes a non-hosted server-url to setup", () => {
+  assert.equal(
+    getComputerSetupCommand("siltok", undefined, "https://raft-api.siltok-ai.cn"),
+    "raft-computer setup /siltok --server-url https://raft-api.siltok-ai.cn",
+  );
+  assert.equal(
+    getComputerSetupCommand("siltok", undefined, `${DEFAULT_COMPUTER_SERVER_URL}/`),
+    "raft-computer setup /siltok",
+  );
+  assert.equal(getComputerSetupCommand("siltok", undefined, undefined), "raft-computer setup /siltok");
+});
+
+test("Windows PATHEXT fix runs before the installer and is off unless enabled", () => {
+  const install = windowsComputerInstallCommand("production", "1.0.28");
+  assert.equal(withWindowsPathextFix(install, false), install);
+  const fixed = withWindowsPathextFix(install, true);
+  assert.equal(fixed, `${WINDOWS_PATHEXT_BIN_FIX}; ${install}`);
+  assert.ok(fixed.endsWith("irm https://cdn.raft.build/computer/install.ps1 | iex"));
+  assert.match(WINDOWS_PATHEXT_BIN_FIX, /SetEnvironmentVariable\('PATHEXT', "\$pe;\.BIN", 'User'\)/);
 });

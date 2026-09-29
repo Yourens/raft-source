@@ -3,6 +3,8 @@
 interface ImportMetaEnv {
   readonly VITE_API_URL?: string;
   readonly VITE_DEPLOYMENT_ENV?: string;
+  readonly VITE_COMPUTER_VERSION_PIN?: string;
+  readonly VITE_COMPUTER_WINDOWS_PATHEXT_FIX?: string;
   readonly VITE_PREVIEW_BRANCH?: string;
   readonly VITE_PREVIEW_API_TARGET?: string;
   readonly VITE_COMMIT_SHA?: string;

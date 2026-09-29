@@ -116,6 +116,33 @@ export function getDaemonConnectCommand({
   return `npx ${packageSpec} --server-url ${serverUrl} --api-key ${apiKey}${suffix}`;
 }
 
+// Self-hosted build knobs (siltok). Both default off, so an unconfigured build
+// keeps upstream behaviour.
+// - VITE_COMPUTER_VERSION_PIN: pin the Computer version the install command
+//   installs when the caller did not pass one, so a self-hosted server is not
+//   paired with a newer hosted-only Computer release.
+// - VITE_COMPUTER_WINDOWS_PATHEXT_FIX=1: Computer 1.0.28 stages itself on
+//   Windows as `k/slots/stable/artifact.bin` and the agent `raft.ps1` wrapper
+//   runs it with `& artifact.bin`; PowerShell only executes extensions listed
+//   in PATHEXT, so every agent `raft` call fails with "operation not
+//   supported". The install command then first adds `.BIN` to the user PATHEXT
+//   (persisted) and to the current session (so the service `setup` starts from
+//   this terminal inherits it).
+const SELF_HOSTED_COMPUTER_VERSION_PIN = import.meta.env?.VITE_COMPUTER_VERSION_PIN;
+const WINDOWS_PATHEXT_FIX_ENABLED = import.meta.env?.VITE_COMPUTER_WINDOWS_PATHEXT_FIX === "1";
+
+export const WINDOWS_PATHEXT_BIN_FIX =
+  "$pe = [Environment]::GetEnvironmentVariable('PATHEXT','User'); "
+  + "if (-not $pe) { $pe = [Environment]::GetEnvironmentVariable('PATHEXT','Machine') }; "
+  + "if (($pe -split ';') -notcontains '.BIN') { [Environment]::SetEnvironmentVariable('PATHEXT', \"$pe;.BIN\", 'User') }; "
+  + "if (($env:PATHEXT -split ';') -notcontains '.BIN') { $env:PATHEXT += ';.BIN' }";
+
+// Runs before the installer: the hosted install.ps1 ends with `exit`, which
+// under `irm | iex` ends the whole PowerShell session.
+export function withWindowsPathextFix(installCommand: string, enabled = WINDOWS_PATHEXT_FIX_ENABLED): string {
+  return enabled ? `${WINDOWS_PATHEXT_BIN_FIX}; ${installCommand}` : installCommand;
+}
+
 // Non-production deployments (staging / slockdev) are internal test surfaces.
 // A tester frequently runs the connect command on a machine that already runs
 // a real prod Computer; without isolation the command would install over
@@ -138,7 +165,10 @@ export function getComputerCommands(
 
   const platform = options.platform ?? "mac-linux";
 
-  const commandServerUrl = deploymentEnv === "production"
+  // An unset deployment env is a self-hosted build: like production, any
+  // non-hosted API origin must be passed explicitly, or `raft-computer setup`
+  // falls back to the hosted default and attaches to the wrong server.
+  const commandServerUrl = deploymentEnv === "production" || !deploymentEnv
     ? isDefaultComputerServerUrl(serverUrl) ? null : serverUrl
     : deploymentEnv === "staging"
     ? STAGING_COMPUTER_SERVER_URL
@@ -148,6 +178,7 @@ export function getComputerCommands(
   const serverUrlArg = commandServerUrl ? ` --server-url ${commandServerUrl}` : "";
   const machineArg = options.machineId ? ` --machine ${options.machineId}` : "";
   const setupArgs = `${serverUrlArg}${machineArg}`;
+  const installVersion = options.version ?? SELF_HOSTED_COMPUTER_VERSION_PIN ?? null;
   if (deploymentEnv && ISOLATED_DEPLOYMENT_ENVS.has(deploymentEnv)) {
     // `slug` is the canonical setup slug (same one used in `setup /${slug}`),
     // so the isolated home matches across web-generated command, #105 harness,
@@ -188,8 +219,8 @@ export function getComputerCommands(
 
   return {
     install: platform === "windows"
-      ? windowsComputerInstallCommand(deploymentEnv, options.version)
-      : computerInstallCommand(deploymentEnv, options.version),
+      ? withWindowsPathextFix(windowsComputerInstallCommand(deploymentEnv, installVersion))
+      : computerInstallCommand(deploymentEnv, installVersion),
     setup: `raft-computer setup /${slug}${setupArgs}`,
     status: "raft-computer status",
     doctor: "raft-computer doctor",
