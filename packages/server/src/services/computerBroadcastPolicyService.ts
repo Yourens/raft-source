@@ -10,6 +10,7 @@ import {
 } from "@botiverse/raft-shared";
 import { evaluateFeatureFlag } from "./featureFlagService";
 import { isPrivacyModeOn } from "../config/privacyMode";
+import { getPinnedComputerVersion } from "./computerVersionService";
 
 // Keep the existing response/snapshot field names for older Web/Computer clients.
 // They describe a Hands release selection now, not a Server-maintained allowlist.
@@ -245,6 +246,12 @@ export async function evaluateBroadcastPolicy(
       version: release.build.version, sha256: asset.sha256, size: asset.size_bytes, url: asset.download_url },
   };
   if (input.requestedTargetVersion != null && input.requestedTargetVersion !== release.build.version) {
+    return { ...selected, reasonCode: "requested_target_mismatch" };
+  }
+  // Self-hosted pin (siltok): never broadcast an upgrade to a hosted release
+  // other than the pinned version (see getPinnedComputerVersion).
+  const pinnedVersion = getPinnedComputerVersion();
+  if (pinnedVersion && pinnedVersion !== release.build.version) {
     return { ...selected, reasonCode: "requested_target_mismatch" };
   }
   if (compareComputerVersions(release.build.version, input.source.version) <= 0) {
