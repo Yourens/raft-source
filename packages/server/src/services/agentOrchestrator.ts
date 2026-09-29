@@ -283,6 +283,7 @@ import {
   machineConnectionsRefusedTotal,
 } from "../metrics";
 import type { ComputerSourceFact } from "./computerBroadcastPolicyService";
+import { isServerSyntheticDeliveryTarget } from "./syntheticDeliveryTargets";
 import {
   MachineCatalogAuthority,
   MachineCatalogStaleError,
@@ -10902,6 +10903,7 @@ export class AgentOrchestrator extends EventEmitter {
 
   protected async canAgentAccessDeliveryTarget(agentId: string, agent: CachedAgentState, message: AgentMessage): Promise<boolean> {
     if (message.third_party_event) return true;
+    if (isServerSyntheticDeliveryTarget(message)) return true;
     let checkError: unknown = null;
     return this.runInTraceSpan(
       "server.agent_delivery.visibility_check",
