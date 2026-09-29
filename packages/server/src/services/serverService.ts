@@ -10,6 +10,7 @@ import * as serverAgreementService from "./serverAgreementService.js";
 import { refreshSubscriptionForServerIfStale } from "./billingService.js";
 import { assertHumanCapacityAvailable, getServerBillingEntitlement, getServerBillingUsage } from "./planService.js";
 import { evaluateFeatureFlag, ONBOARDING_OWNER_WIZARD_FEATURE_FLAG_KEY } from "./featureFlagService.js";
+import { resolveNewServerPlan } from "./selfHostedServerPlan.js";
 
 export interface SidebarOrderPreferences {
   channelOrder: string[];
@@ -163,10 +164,12 @@ export async function createServer(name: string, slug: string, ownerId: string) 
   }
 
   return db.transaction(async (tx) => {
+    const plan = resolveNewServerPlan();
     const [server] = await tx.insert(servers).values({
       name,
       slug,
       ownerId,
+      ...(plan ? { plan } : {}),
     }).returning();
 
     // Add owner as server member.
