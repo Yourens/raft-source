@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
-import { isServerSyntheticDeliveryTarget, ONBOARDING_CONTEXT_CHANNEL_ID } from "./syntheticDeliveryTargets.js";
+import { isServerSyntheticDeliveryTarget, ONBOARDING_CONTEXT_CHANNEL_ID } from "./syntheticDeliveryTargets";
 
 test("only the system-sent onboarding context bypasses channel visibility lookup", () => {
   assert.equal(isServerSyntheticDeliveryTarget({ channel_id: ONBOARDING_CONTEXT_CHANNEL_ID, sender_type: "system" }), true);
