@@ -281,3 +281,21 @@ dbTest("the gate reads remote_computer_upgrade_v2: allowed for the server opens 
   assert.equal(disabled.eligibility, "no_broadcast");
   assert.equal(disabled.reasonCode, "broadcast_disabled");
 });
+
+test("self-hosted pin blocks upgrade broadcasts to any other hosted release", async () => {
+  const previous = process.env.RAFT_COMPUTER_LATEST_VERSION;
+  try {
+    process.env.RAFT_COMPUTER_LATEST_VERSION = "1.0.28";
+    const blocked = await evaluateWithOpenGate(input(), { fetchFn: respond() });
+    assert.equal(blocked.eligibility, "no_broadcast");
+    assert.equal(blocked.reasonCode, "requested_target_mismatch");
+
+    process.env.RAFT_COMPUTER_LATEST_VERSION = "1.0.31";
+    const allowed = await evaluateWithOpenGate(input(), { fetchFn: respond() });
+    assert.equal(allowed.eligibility, "eligible");
+    assert.equal(allowed.targetVersion, "1.0.31");
+  } finally {
+    if (previous === undefined) delete process.env.RAFT_COMPUTER_LATEST_VERSION;
+    else process.env.RAFT_COMPUTER_LATEST_VERSION = previous;
+  }
+});

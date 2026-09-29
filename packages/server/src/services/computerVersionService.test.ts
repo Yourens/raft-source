@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   getLatestComputerReleaseNotes,
   getLatestComputerVersion,
+  getPinnedComputerVersion,
   resolveComputerUpgradeAvailable,
   __resetLatestComputerVersionForTest,
 } from "./computerVersionService";
@@ -292,4 +293,25 @@ test("resolveComputerUpgradeAvailable: server asserts available/up-to-date/unkno
   assert.equal(resolveComputerUpgradeAvailable(true, "0.0.61", null), null);
   assert.equal(resolveComputerUpgradeAvailable(true, "0.0.62-rc1", "0.0.62"), null);
   assert.equal(resolveComputerUpgradeAvailable(true, "0.0.62", "latest"), null);
+});
+
+test("self-hosted pin is returned as latest without querying Hands", async () => {
+  __resetLatestComputerVersionForTest();
+  const originalFetch = globalThis.fetch;
+  const previous = process.env.RAFT_COMPUTER_LATEST_VERSION;
+  let fetched = false;
+  globalThis.fetch = (async () => { fetched = true; return Response.json({ version: "9.9.9" }); }) as typeof fetch;
+  try {
+    process.env.RAFT_COMPUTER_LATEST_VERSION = " 1.0.28 ";
+    assert.equal(await getLatestComputerVersion(), "1.0.28");
+    assert.equal(fetched, false);
+    assert.equal(getLatestComputerReleaseNotes(), null);
+    assert.equal(resolveComputerUpgradeAvailable(true, "1.0.28", await getLatestComputerVersion()), false);
+    assert.equal(getPinnedComputerVersion({ RAFT_COMPUTER_LATEST_VERSION: "" }), null);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previous === undefined) delete process.env.RAFT_COMPUTER_LATEST_VERSION;
+    else process.env.RAFT_COMPUTER_LATEST_VERSION = previous;
+    __resetLatestComputerVersionForTest();
+  }
 });
