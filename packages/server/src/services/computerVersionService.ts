@@ -37,7 +37,17 @@ const HANDS_LATEST_VERSION_URL =
 const HANDS_LATEST_BUILD_URL =
   "https://hands.build/public/v2/apps/raft-computer-cli/latest?channel=main";
 
+// Self-hosted pin (siltok). The Hands release authority tracks the hosted service, whose
+// server is newer than a self-hosted snapshot; comparing against it tells
+// every self-hosted Computer to upgrade to a release this server may not
+// support. When set, this version is "latest" and Hands is never queried.
+export function getPinnedComputerVersion(env: NodeJS.ProcessEnv = process.env): string | null {
+  return env.RAFT_COMPUTER_LATEST_VERSION?.trim() || null;
+}
+
 export function getLatestComputerVersion(): Promise<string | null> {
+  const pinned = getPinnedComputerVersion();
+  if (pinned) return Promise.resolve(pinned);
   const now = Date.now();
   if (cachedLatestComputerVersion && now - lastFetchTime < REFRESH_INTERVAL_MS) {
     return Promise.resolve(cachedLatestComputerVersion);
