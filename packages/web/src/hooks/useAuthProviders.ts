@@ -42,14 +42,11 @@ let cachedProviders: AuthProvider[] | null = null;
 let providersRequest: Promise<AuthProvider[]> | null = null;
 /** Some Server offers single sign-on (RFC 083): the sign-in page shows "Continue with SSO". */
 let ssoOffered = false;
-/** The source-available deployment is at the Raft License's user limit: the sign-up page says so (signing up still works). */
-let deploymentUserLimitReached = false;
 
 export function __resetAuthProvidersForTest(): void {
   cachedProviders = null;
   providersRequest = null;
   ssoOffered = false;
-  deploymentUserLimitReached = false;
 }
 
 function isSocialAuthProviderId(value: unknown): value is SocialAuthProviderId {
@@ -78,7 +75,6 @@ async function fetchAuthProviders(): Promise<AuthProvider[]> {
     providersRequest = api.get("/auth/providers")
       .then(({ data }) => {
         ssoOffered = (data as { sso?: unknown } | null)?.sso === true;
-        deploymentUserLimitReached = (data as { deploymentUserLimitReached?: unknown } | null)?.deploymentUserLimitReached === true;
         const providers = normalizeProviders(data);
         rememberProviderCount(providers);
         return providers;
@@ -137,6 +133,5 @@ export function useAuthProviders() {
     loading,
     expectedCount,
     ssoOffered: !loading && ssoOffered,
-    deploymentUserLimitReached: !loading && deploymentUserLimitReached,
   };
 }

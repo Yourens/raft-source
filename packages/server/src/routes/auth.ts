@@ -15,7 +15,6 @@ import multer from "multer";
 import { z } from "zod";
 import * as userService from "../services/userService";
 import { HumanSeatLimitError } from "../services/planService";
-import { DeploymentUserLimitError, deploymentUserLimitReached as isDeploymentUserLimitReached } from "../services/deploymentUserLimit";
 import { getDb, type DatabaseExecutor } from "../db/index";
 import { findPendingAccountDeletion } from "../services/accountDeletion/requests";
 import { setProductAnalyticsOptOut } from "../services/productAnalyticsGate";
@@ -937,12 +936,8 @@ authRouter.get("/providers", async (req, res) => {
   }));
   // RFC 083: "Continue with SSO" is offered once some Server has single sign-on on.
   const sso = await anySsoSignInOffered().catch(() => false);
-  // The sign-up page's notice (source-available only; always false in cloud,
-  // without a query): the deployment already has as many people as the Raft
-  // License allows. Signing up still works; joining is what is refused.
-  const deploymentUserLimitReached = await isDeploymentUserLimitReached().catch(() => false);
 
-  res.json({ providers, sso, deploymentUserLimitReached });
+  res.json({ providers, sso });
 });
 
 authRouter.get("/identities", requireAuth, async (req, res) => {
@@ -2463,11 +2458,6 @@ authRouter.post("/accept-invite", requireAuth, requireVerified, async (req, res)
     const agreementResponse = serverAgreementService.agreementErrorResponse(err);
     if (agreementResponse) {
       res.status(agreementResponse.status).json(agreementResponse.body);
-      return;
-    }
-    // The Raft License's user limit (source-available): 403 with its code.
-    if (err instanceof DeploymentUserLimitError) {
-      refuse(res, err.status, err.refusal);
       return;
     }
     const msg = err?.message || "";

@@ -20,7 +20,6 @@ import LegalAcceptanceCheckbox, { LegalAcceptanceUsageDataNotice } from "./Legal
 import OpenInBrowserSignInGuide from "./OpenInBrowserSignInGuide";
 import { DesktopSignInWaiting, SocialProviderSection } from "./SocialProviderButton";
 import { AUTH_MESSAGE_IDS, authServerErrorMessage, isValidEmailFormat } from "./authErrors";
-import { DeploymentUserLimitText } from "../ui/DeploymentUserLimitText";
 
 interface RegisterPageProps {
   onSwitchToLogin: () => void;
@@ -35,7 +34,6 @@ export default function RegisterPage({ onSwitchToLogin, previewProviders }: Regi
     enabledProviders: configuredProviders,
     loading: providersLoading,
     expectedCount: expectedProviderCount,
-    deploymentUserLimitReached,
   } = useAuthProviders();
   const enabledProviders = previewProviders ?? configuredProviders;
   const [email, setEmail] = useState("");
@@ -115,12 +113,6 @@ export default function RegisterPage({ onSwitchToLogin, previewProviders }: Regi
         <AuthPageIntro title={formatMessage({ id: "pages.register.title" })} />
 
         {error ? <Banner intent="warning" className="mb-4">{error}</Banner> : null}
-        {/* Signing up still works at the limit: only joining a server as one more person is refused. */}
-        {deploymentUserLimitReached && !previewProviders ? (
-          <Banner intent="info" withIcon className="mb-4" data-testid="register-user-limit-notice">
-            <DeploymentUserLimitText id="deploymentUserLimit.registerNotice" />
-          </Banner>
-        ) : null}
 
         <form onSubmit={handleSubmit} className="stack-y-4 md:pointer-fine:stack-y-3" autoComplete="on" noValidate>
           <FormField label={formatMessage({ id: "pages.register.emailLabel" })} error={fieldErrors.email} htmlFor="register-email">

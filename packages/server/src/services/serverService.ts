@@ -31,7 +31,7 @@ import { hasServerCompletedSetupForProjection } from "./serverSetupCompletionSer
 import { newAuditOperationId, recordIntegrationAuditEvent, recordSystemAgentRoleGrant, serverAuditContextMetadata, type IntegrationAuditSource } from "./integrationAuditService";
 import { recordChannelMembershipsEnded, type ChannelMembershipEndAudit, type EndedChannelMembership } from "./channelMembershipAudit";
 import { announceSeatJoinBlocksForSeatChange } from "./listChangedRealtime";
-import { assertHumanAccountRoom } from "./deploymentUserLimit";
+import { resolveNewServerPlan } from "./selfHostedServerPlan";
 
 export interface SidebarOrderPreferences {
   channelOrder: string[];
@@ -229,10 +229,12 @@ export async function createServer(name: string, slug: string, ownerId: string) 
   }
 
   return db.transaction(async (tx) => {
+    const plan = resolveNewServerPlan();
     const [server] = await tx.insert(servers).values({
       name,
       slug,
       ownerId,
+      ...(plan ? { plan } : {}),
     }).returning();
 
     // Add owner as server member.
@@ -288,11 +290,6 @@ export async function createServer(name: string, slug: string, ownerId: string) 
     // policy defaults empty, so deploying this source does not itself change
     // the live default set.
     await autoInstallOfficialAppsForProvisionedServer(server.id, tx as ReturnType<typeof getDb>);
-
-    // The Raft License's user limit (source-available only), last: the
-    // creator now owns a server, so counts. The first account on a fresh
-    // deployment always fits.
-    await assertHumanAccountRoom(tx, ownerId, { serverId: server.id, previousRole: null });
 
     return server;
   });
@@ -1182,11 +1179,6 @@ export async function addMember(
       await ensureAllChannelHumanRows(db, serverId, { userIds: [userId], lockedUserIds: options.allChannelLockedUserIds });
     }
 
-    // The Raft License's user limit (source-available only): last, after every
-    // write and lock above. A member seat, or a second Guest seat, may make
-    // one more person count.
-    if (inserted) await assertHumanAccountRoom(db, userId, { serverId, previousRole: null });
-
     return !!inserted;
   };
 
@@ -1934,12 +1926,6 @@ export async function transitionMemberRoleInTransaction(
     members: [{ principalType: "human", principalId: input.targetUserId, role: input.nextRole }],
     provenance: { source: "server_service", actor_type: "human", previous_role: target.role },
   }, tx);
-  // The Raft License's user limit (source-available only), last: a Guest
-  // leaving the role may make one more person count. Other role changes
-  // never change who counts.
-  if (target.role === "guest") {
-    await assertHumanAccountRoom(tx, input.targetUserId, { serverId: input.serverId, previousRole: target.role });
-  }
   return {
     changed: true,
     previousRole: target.role,

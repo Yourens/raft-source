@@ -26,8 +26,6 @@ import { useAppNavigate, useMobileBack } from "../../hooks/useAppNavigate";
 import { hasToastManager, showToast } from "../toastBridge";
 import InlineBadgeEditor from "../InlineBadgeEditor";
 import AvatarSlot from "../ui/AvatarSlot";
-import { DeploymentUserLimitText } from "../ui/DeploymentUserLimitText";
-import { isDeploymentUserLimitRefusal } from "../../utils/deploymentUserLimit";
 import { HumanAvatarEditMenu } from "./HumanAvatarEditMenu";
 import { useImageLightboxStore } from "../../store/imageLightboxStore";
 import { isRaftUploadedHumanAvatarUrl } from "../../utils/humanAvatar";
@@ -193,8 +191,6 @@ export default function HumanDetailPanel({
   const [rolePickerOpen, setRolePickerOpen] = useState(false);
   const [roleSaving, setRoleSaving] = useState(false);
   const [roleError, setRoleError] = useState("");
-  // A Guest's promotion refused at the Raft License's user limit (its sentence has a mail link).
-  const [roleUserLimitRefused, setRoleUserLimitRefused] = useState(false);
   /** The role waiting on the self-demotion confirmation. */
   const [pendingSelfDemotion, setPendingSelfDemotion] = useState<ServerRole | null>(null);
   /** The role waiting on a seat: Guest → member with the Pro seats full. */
@@ -349,7 +345,6 @@ export default function HumanDetailPanel({
     wantOwnImpact();
     setRolePickerOpen(true);
     setRoleError("");
-    setRoleUserLimitRefused(false);
   }, [wantOwnImpact]);
   const handleMessage = useCallback(async () => {
     useProfileStore.getState().closeProfile();
@@ -438,7 +433,6 @@ export default function HumanDetailPanel({
     try {
       setRoleSaving(true);
       setRoleError("");
-      setRoleUserLimitRefused(false);
       await updateMemberRole(userId, nextRole, serverId ? { serverId } : undefined);
       const title = formatMessage({ id: "member.detail.roleChanged" }, { name: personName, role: roleLabel(nextRole) });
       if (!undoTo || !serverId) {
@@ -509,10 +503,6 @@ export default function HumanDetailPanel({
         return;
       }
       // The badge still shows the stored role; the failure is said under it.
-      if (isDeploymentUserLimitRefusal(err)) {
-        setRoleUserLimitRefused(true);
-        return;
-      }
       setRoleError(
         axiosErr.response?.data?.error ||
           formatMessage({
@@ -888,9 +878,9 @@ export default function HumanDetailPanel({
                     {formatMessage({ id: "member.detail.unknown" })}
                   </Badge>
                 )}
-                {(roleError || roleUserLimitRefused) && (
+                {roleError && (
                   <div role="alert" className="mt-1 text-caption font-semibold text-warning-strong" data-testid="human-role-error">
-                    {roleUserLimitRefused ? <DeploymentUserLimitText /> : roleError}
+                    {roleError}
                   </div>
                 )}
               </div>

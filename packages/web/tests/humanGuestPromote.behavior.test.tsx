@@ -152,20 +152,3 @@ test("promoting a Guest from the Role picker offers no Undo either", async () =>
   await waitFor(() => assert.equal(toasts.length, 1));
   assert.equal(toasts[0]!.actionProps, undefined, "no Undo back to Guest");
 });
-
-test("a promotion refused at the Raft License's user limit says so under the role, with the mail link", async () => {
-  seed("owner");
-  useServerStore.setState({
-    updateMemberRole: async () => {
-      throw Object.assign(new Error("http"), { response: { status: 403, data: { code: "deployment_user_limit_reached", error: "server sentence" } } });
-    },
-  } as never);
-  renderPanel(guest());
-  fireEvent.click(screen.getByRole("button", { name: "Promote to server member" }));
-  fireEvent.click(await screen.findByRole("button", { name: "Make member" }));
-  const error = await screen.findByTestId("human-role-error");
-  assert.match(error.textContent ?? "", /This Raft Community Edition deployment already has 5 people, the Raft License limit\./);
-  const link = screen.getByRole("link", { name: "contact@raft.build" });
-  assert.ok(error.contains(link) && link.getAttribute("href") === "mailto:contact@raft.build");
-  assert.equal(toasts.length, 0);
-});

@@ -12,8 +12,8 @@ import SurfaceListItem from "../../../components/ui/SurfaceListItem";
 
 /** The server and web's public source: a snapshot per release of this repository. */
 const RAFT_SOURCE_URL = "https://github.com/botiverse/raft-source";
-/** Its license, by name (a name, not prose: the same in every locale): FSL-1.1-ALv2 with additional conditions, the repository's LICENSE. */
-const RAFT_SOURCE_LICENSE = "Raft License";
+/** Its license, by SPDX-style name (a name, not prose: the same in every locale): the repository's LICENSE. */
+const RAFT_SOURCE_LICENSE = "FSL-1.1-ALv2";
 
 // Exported for settingsSubBatchC.i18n.behavior.test.tsx (removed in the 2026-11 web DOM test prune) — rendered directly so the
 // zh teeth exercise the real component without mounting the full SettingsPanel

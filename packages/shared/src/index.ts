@@ -5893,14 +5893,6 @@ export interface BillingCapacityLimitState {
 
 /** The code on a refusal because the server has no seat left for one more human. */
 export const HUMAN_SEAT_LIMIT_REACHED_CODE = "human_seat_limit_reached";
-/**
- * The code on a refusal because a source-available deployment already has as
- * many people as the Raft License allows (Part I §2), and the change would
- * add one more: someone joining a server, becoming a member, or creating one.
- */
-export const DEPLOYMENT_USER_LIMIT_REACHED_CODE = "deployment_user_limit_reached";
-/** Where to ask for a license above the source-available edition's user limit. */
-export const RAFT_LICENSE_CONTACT_EMAIL = "contact@raft.build";
 /** The code on a refusal because the server has no room for one more agent: a Pro seat share, or Free's agent count. */
 export const AGENT_LIMIT_REACHED_CODE = "agent_limit_reached";
 

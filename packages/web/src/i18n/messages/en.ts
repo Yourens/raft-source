@@ -1335,10 +1335,6 @@ export const en = {
   "messageLink.unavailable.body": "The link may be wrong, or you don't have access to it.",
   "messageLink.unavailable.back": "Back",
   "messageLink.unavailable.join": "Join to view",
-  // The Raft License's user limit (Part I §2), source-available only: the server refuses with deployment_user_limit_reached.
-  "deploymentUserLimit.refused": "This Raft Community Edition deployment already has 5 people, the Raft License limit. To go above it, email <mail>contact@raft.build</mail> for a separate license.",
-  "deploymentUserLimit.inviteNotice": "This Raft Community Edition deployment already has 5 people, the Raft License limit, so only someone already among them can join this server. To go above it, email <mail>contact@raft.build</mail> for a separate license.",
-  "deploymentUserLimit.registerNotice": "This Raft Community Edition deployment already has 5 people, the Raft License limit. You can still create an account, and join a channel as a guest when someone invites you. To add more people, email <mail>contact@raft.build</mail> for a separate license.",
   "desktopAppLink.banner.title": "Open this message in Raft Desktop?",
   "desktopAppLink.banner.titlePage": "Open this page in Raft Desktop?",
   "desktopAppLink.banner.description": "You've used Raft Desktop in the last 30 days.",

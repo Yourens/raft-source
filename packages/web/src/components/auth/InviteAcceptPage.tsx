@@ -13,8 +13,6 @@ import { Button, Card, ScrollArea } from "@botiverse/raft-ui";
 import CenteredCardFrame from "./CenteredCardFrame";
 import { AuthPageIntro } from "./AuthPageFrame";
 import AgreementBody from "../server/AgreementBody";
-import { DeploymentUserLimitText } from "../ui/DeploymentUserLimitText";
-import { isDeploymentUserLimitRefusal } from "../../utils/deploymentUserLimit";
 
 interface InviteAcceptPageProps {
   token: string;
@@ -102,8 +100,6 @@ export default function InviteAcceptPage({
     humanSeatLimitMessage?: string | null;
     /** The seats are full and pro_seat_add is on for this server; the server says so, since a visitor signed out can't evaluate the flag. */
     seatNoticeEnabled?: boolean;
-    /** The source-available deployment is at the Raft License's user limit: only someone already counted can join. */
-    deploymentUserLimitReached?: boolean;
     agreement: {
       id: string;
       title: string;
@@ -118,10 +114,8 @@ export default function InviteAcceptPage({
   const [acceptedServerId, setAcceptedServerId] = useState("");
   const [error, setError] = useState("");
   const [errorId, setErrorId] = useState<MessageId | null>(null);
-  // The accept refused at the Raft License's user limit: its sentence has a mail link, so it is not a string.
-  const [userLimitRefused, setUserLimitRefused] = useState(false);
   const errorText = error || (errorId ? formatMessage({ id: errorId }) : "");
-  const hasError = Boolean(errorText) || userLimitRefused;
+  const hasError = Boolean(errorText);
   const insidePreview = inviteInfo ? renderInsidePreview(inviteInfo, formatMessage) : null;
   const humanSeatLimitReached = inviteInfo?.humanSeatLimitReached === true;
   // Behind pro_seat_add (task #10, cindyz): someone signed out sees only Sign In
@@ -161,7 +155,6 @@ export default function InviteAcceptPage({
     setAccepting(true);
     setError("");
     setErrorId(null);
-    setUserLimitRefused(false);
     try {
       const result = await acceptInvite(token, agreementId);
       setAccepted(true);
@@ -189,10 +182,6 @@ export default function InviteAcceptPage({
         setInviteInfo((current) => current ? { ...current, agreement: response.agreement } : current);
         setError("");
     setErrorId(null);
-        return;
-      }
-      if (isDeploymentUserLimitRefusal(err)) {
-        setUserLimitRefused(true);
         return;
       }
       if (response?.error) {
@@ -277,8 +266,8 @@ export default function InviteAcceptPage({
         {hasError ? (
           <>
             <AuthPageIntro title={formatMessage({ id: "pages.invite.errorTitle" })} />
-            <Banner intent="warning" className="mb-6" data-testid={userLimitRefused ? "invite-user-limit-refused" : undefined}>
-              {userLimitRefused ? <DeploymentUserLimitText /> : errorText}
+            <Banner intent="warning" className="mb-6">
+              {errorText}
             </Banner>
           </>
         ) : inviteInfo ? (
@@ -340,12 +329,6 @@ export default function InviteAcceptPage({
                 {formatMessage({ id: "pages.invite.humanSeatLimit" })}
               </Banner>
             ))}
-            {/* Said before Join: someone already counted (a member elsewhere here) still gets in, so Join stays. */}
-            {!seatsFull && inviteInfo.deploymentUserLimitReached === true && (
-              <Banner intent="info" withIcon className="mb-6" data-testid="invite-user-limit-notice">
-                <DeploymentUserLimitText id="deploymentUserLimit.inviteNotice" />
-              </Banner>
-            )}
           </>
         ) : null}
 

@@ -1,4 +1,4 @@
-import { DEPLOYMENT_USER_LIMIT_REACHED_CODE, SERVER_SLUG_MIN_LENGTH, validateNewServerSlugReason } from "@botiverse/raft-shared";
+import { SERVER_SLUG_MIN_LENGTH, validateNewServerSlugReason } from "@botiverse/raft-shared";
 import type { ServerSlugValidationReason, UpgradeGate } from "@botiverse/raft-shared";
 import api from "../../api/client";
 import type { MessageId } from "../../i18n/messages";
@@ -379,8 +379,6 @@ const INVITEE_ERROR_IDS: Record<string, MessageId> = {
   already_member: "externalInvite.error.alreadyMember",
   guest_elsewhere: "externalInvite.error.guestElsewhere",
   channel_full: "externalInvite.error.channelFull",
-  // accept-as-guest (a second Guest seat) or a new server's owner: the Raft License's user limit (source-available)
-  [DEPLOYMENT_USER_LIMIT_REACHED_CODE]: "deploymentUserLimit.refused",
   // connect / request-approval
   invalid_server: "externalInvite.error.invalidServer",
   server_admin_required: "externalInvite.error.serverAdminRequired",

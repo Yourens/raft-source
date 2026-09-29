@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { FormEvent } from "react";
 import { useIntl } from "react-intl";
 import { clearClockTimeout, setClockTimeout } from "@botiverse/raft-shared";
 import { useServerStore } from "../../store/serverStore";
@@ -17,8 +17,6 @@ import SignedInAs from "./SignedInAs";
 import { requestHostedOnboardingServerSwitch } from "../../embed/hostBridge";
 import { ServerOptionCard } from "./ServerOptionCard";
 import { useServerNameAndSlug } from "./useServerNameAndSlug";
-import { DeploymentUserLimitText } from "../ui/DeploymentUserLimitText";
-import { isDeploymentUserLimitRefusal } from "../../utils/deploymentUserLimit";
 
 interface ServerSelectorProps {
   onSelect: (server: Server) => void;
@@ -48,9 +46,6 @@ export default function ServerSelector({ onSelect }: ServerSelectorProps) {
   }, [hasServers]);
   const { name, slug, handleNameChange, handleSlugChange, reset: resetNameAndSlug } = useServerNameAndSlug();
   const [error, setError] = useState("");
-  // Creating it refused at the Raft License's user limit: its sentence has a mail link, so it is not a string.
-  const [userLimitRefused, setUserLimitRefused] = useState(false);
-  const shownError: ReactNode = userLimitRefused ? <DeploymentUserLimitText /> : error;
   const [switchPending, setSwitchPending] = useState(false);
   const switchTimeoutRef = useRef<ReturnType<typeof setClockTimeout> | null>(null);
 
@@ -81,7 +76,6 @@ export default function ServerSelector({ onSelect }: ServerSelectorProps) {
     setView("choose");
     resetNameAndSlug();
     setError("");
-    setUserLimitRefused(false);
   }, [resetNameAndSlug]);
 
   const handleShowCreate = useCallback(() => {
@@ -95,15 +89,10 @@ export default function ServerSelector({ onSelect }: ServerSelectorProps) {
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
-    setUserLimitRefused(false);
     try {
       const server = await createServer(name, slug);
       onSelect(server);
     } catch (err: any) {
-      if (isDeploymentUserLimitRefusal(err)) {
-        setUserLimitRefused(true);
-        return;
-      }
       setError(err.response?.data?.error || formatMessage({ id: "pages.serverSelector.createFailed" }));
     }
   };
@@ -143,9 +132,9 @@ export default function ServerSelector({ onSelect }: ServerSelectorProps) {
               </p>
             </div>
             <form onSubmit={handleCreate} className="flex flex-col gap-3">
-              {shownError && (
+              {error && (
                 <Banner intent="warning">
-                  {shownError}
+                  {error}
                 </Banner>
               )}
               <FormField
@@ -205,9 +194,9 @@ export default function ServerSelector({ onSelect }: ServerSelectorProps) {
           />
 
           <form onSubmit={handleCreate} className="stack-y-3">
-            {shownError && (
+            {error && (
               <Banner intent="warning">
-                {shownError}
+                {error}
               </Banner>
             )}
             <FormField label={formatMessage({ id: "pages.serverSelector.serverNameLabel" })}>

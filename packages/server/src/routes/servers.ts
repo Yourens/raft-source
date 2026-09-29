@@ -105,7 +105,6 @@ import { traceRouteFailure } from "../tracing/routeFailure";
 import { sendJsonServerError } from "./errorResponse";
 import { refuseWithoutRecentSecondFactor } from "./secondFactor";
 import { refuse, RefusalError } from "../lib/refusal";
-import { DeploymentUserLimitError } from "../services/deploymentUserLimit";
 import { readWithStaleOnOverload, resolveSoftTimeoutMs, STALE_RESPONSE_HEADER } from "./rwStaleRead";
 import type { DbQueryTracer } from "../tracing/dbQueryTrace";
 import {
@@ -1091,11 +1090,6 @@ serverRouter.post("/join-community", async (req, res) => {
     const agreementResponse = serverAgreementService.agreementErrorResponse(err);
     if (agreementResponse) {
       res.status(agreementResponse.status).json(agreementResponse.body);
-      return;
-    }
-    // The Raft License's user limit (source-available): 403 with its code.
-    if (err instanceof DeploymentUserLimitError) {
-      refuse(res, err.status, err.refusal);
       return;
     }
     const msg = err?.message || "";
@@ -2521,11 +2515,6 @@ serverRouter.patch("/:id/members/:memberId", async (req, res) => {
     if (err instanceof HumanSeatLimitError) {
       notePaywallHit(req, "seat_limit_invite");
       res.status(409).json({ error: err.message, code: err.code, capacityLimit: err.detail });
-      return;
-    }
-    // A Guest made a member when the Raft License's user limit is reached (source-available).
-    if (err instanceof DeploymentUserLimitError) {
-      refuse(res, err.status, err.refusal);
       return;
     }
     res.status(500).json({ error: "Failed to update member role" });

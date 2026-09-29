@@ -29,4 +29,4 @@ issue, pull request or discussion.
 
 Because we do not accept contributions today there is no contributor license
 agreement. Code in this repository is licensed under
-the [Raft License](LICENSE) (FSL-1.1-ALv2 with additional conditions).
+[FSL-1.1-ALv2](LICENSE).

@@ -316,7 +316,7 @@ export const READ_ROUTE_VISIBILITY_CLASSIFICATION: readonly ReadRouteClassificat
   { route: "GET /api/auth/invite-info", entry: "none", reason: "invite metadata; no conversation objects" },
   { route: "GET /api/auth/me", entry: "none", reason: "current user; no conversation objects" },
   { route: "GET /api/auth/me/username-available", entry: "none", reason: "username availability; no conversation objects" },
-  { route: "GET /api/auth/providers", entry: "none", reason: "auth providers list, and whether the deployment is at the Raft License user limit (a boolean); no conversation objects" },
+  { route: "GET /api/auth/providers", entry: "none", reason: "auth providers list and whether a Server offers single sign-on; no conversation objects" },
   { route: "GET /api/auth/second-factor/status", entry: "none", reason: "the caller's own two-step verification state; no conversation objects" },
   { route: "GET /api/auth/second-factor/passkeys", entry: "none", reason: "the caller's own passkeys (names and dates); no conversation objects" },
   { route: "GET /api/auth/second-factor/recovery", entry: "none", reason: "the caller's own two-step verification recovery request (status and dates); no conversation objects" },

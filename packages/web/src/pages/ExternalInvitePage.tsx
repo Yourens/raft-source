@@ -13,7 +13,6 @@ import { useServerNameAndSlug } from "../components/auth/useServerNameAndSlug";
 import FormField from "../components/ui/FormField";
 import SlugInput from "../components/ui/SlugInput";
 import Banner from "../components/ui/Banner";
-import { DeploymentUserLimitText } from "../components/ui/DeploymentUserLimitText";
 import { ServerRow } from "../components/externalInvite/ServerRow";
 import { ApproverPicker, CancelRequestConfirm, InviteProgress } from "../components/externalInvite/InviteProgress";
 import { InviteStepActions } from "../components/externalInvite/InviteStepActions";
@@ -481,7 +480,7 @@ export default function ExternalInvitePage({ pollMs = POLL_MS }: ExternalInviteP
         </Button>
       ) : undefined}
     >
-      {error.id === "deploymentUserLimit.refused" ? <DeploymentUserLimitText /> : formatMessage({ id: error.id }, { ...values, max: MAX_JOINT_CHANNEL_SERVERS, target: error.target ?? serverById(error.serverId)?.name ?? values.target })}
+      {formatMessage({ id: error.id }, { ...values, max: MAX_JOINT_CHANNEL_SERVERS, target: error.target ?? serverById(error.serverId)?.name ?? values.target })}
       {keptInError ? (
         <span className="ml-1">{formatMessage({ id: "externalInvite.newServer.kept" }, { target: keptName })}</span>
       ) : null}

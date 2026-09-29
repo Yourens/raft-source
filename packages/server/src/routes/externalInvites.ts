@@ -12,7 +12,6 @@ import { ChannelConversionInProgressError } from "../services/channelConversionF
 import { ChannelConversionError, ChannelConversionUploadsInFlightError } from "../services/channelConversionService";
 import { JointChannelLimitError } from "../services/jointChannelLimitService";
 import { createServerAsOwner, ServerCreateInputError } from "../services/serverCreateService";
-import { DeploymentUserLimitError } from "../services/deploymentUserLimit";
 import { recordServerCreated } from "../services/onboardingProductEvents";
 import { likelyBotUserAgent, recordExternalInviteLinkOpened, recordExternalInvitePageViewed } from "../services/externalInviteProductEvents";
 import {
@@ -76,10 +75,6 @@ export function externalConnectRefusal(err: unknown): { status: number; body: { 
     || err instanceof ChannelConversionInProgressError || err instanceof ChannelConversionUploadsInFlightError
     || err instanceof ChannelConversionError) {
     return { status: 409, body: { error: err.message, code: err.code } };
-  }
-  // The Raft License's user limit (source-available): a second Guest seat, or a new server's owner.
-  if (err instanceof DeploymentUserLimitError) {
-    return { status: err.status, body: { error: err.refusal.error, code: err.code } };
   }
   return null;
 }

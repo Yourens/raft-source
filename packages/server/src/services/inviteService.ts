@@ -15,7 +15,6 @@ import * as serverAgreementService from "./serverAgreementService";
 import { refreshSubscriptionForServerIfStale } from "./billingService";
 import { evaluateFeatureFlag } from "./featureFlagService";
 import { enforceServerInviteEmailRate } from "./serverInviteEmailLimits";
-import { deploymentUserLimitReached } from "./deploymentUserLimit";
 import {
   acquireServerLock,
   SERVER_MEMBERSHIP_ADMISSION_LOCK_NAMESPACE,
@@ -57,12 +56,6 @@ export interface InviteInfo {
    * evaluate the flag.
    */
   seatNoticeEnabled: boolean;
-  /**
-   * The source-available deployment already has as many people as the Raft
-   * License allows (deploymentUserLimit.ts): joining works only for someone
-   * who already counts. Always false in the cloud edition.
-   */
-  deploymentUserLimitReached: boolean;
   agreement: serverAgreementService.PublicAgreement | null;
 }
 
@@ -468,7 +461,6 @@ export async function getInviteInfo(token: string): Promise<InviteInfo | null> {
     inviterName: invite.kind === "email" ? inviter?.name || "Someone" : inviter?.name || null,
     agreement: await serverAgreementService.getActiveAgreement(invite.serverId),
     ...humanSeatLimit,
-    deploymentUserLimitReached: await deploymentUserLimitReached(),
     ...counts,
   };
 }

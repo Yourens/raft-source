@@ -290,25 +290,6 @@ test("Screen A creates the server with the edited values", async () => {
   assert.deepEqual(view.selected, [server({ name: "Launch Lab", slug: "launch-team" })]);
 });
 
-test("creating a server refused at the Raft License's user limit says so with the mail link", async () => {
-  resetStores();
-  useServerStore.setState({
-    createServer: async () => {
-      throw Object.assign(new Error("http"), { response: { status: 403, data: { code: "deployment_user_limit_reached", error: "server sentence" } } });
-    },
-  } as never);
-  const view = renderSelector();
-
-  fireEvent.change(screen.getByLabelText("Server name"), { target: { value: "Launch Lab" } });
-  fireEvent.click(screen.getByRole("button", { name: "Create server" }));
-
-  const link = await screen.findByRole("link", { name: "contact@raft.build" });
-  assert.equal(link.getAttribute("href"), "mailto:contact@raft.build");
-  assert.ok(screen.getByText(/This Raft Community Edition deployment already has 5 people, the Raft License limit\./));
-  assert.ok(screen.queryByText("server sentence") === null, "the localized sentence, not the server's");
-  assert.deepEqual(view.selected, []);
-});
-
 test("existing users keep the compact create-server flow", () => {
   resetStores({ servers: [server()] });
   renderSelector();
