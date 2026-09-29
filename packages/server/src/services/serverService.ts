@@ -14,6 +14,7 @@ import { assertHumanCapacityAvailable, getServerBillingEntitlement, getServerBil
 import { evaluateFeatureFlag, ONBOARDING_OWNER_WIZARD_FEATURE_FLAG_KEY } from "./featureFlagService";
 import { autoInstallOfficialAppsForProvisionedServer } from "./officialAppAutoInstallService";
 import { hasServerCompletedSetupForProjection } from "./serverSetupCompletionService";
+import { resolveNewServerPlan } from "./selfHostedServerPlan";
 
 export interface SidebarOrderPreferences {
   channelOrder: string[];
@@ -167,10 +168,12 @@ export async function createServer(name: string, slug: string, ownerId: string) 
   }
 
   return db.transaction(async (tx) => {
+    const plan = resolveNewServerPlan();
     const [server] = await tx.insert(servers).values({
       name,
       slug,
       ownerId,
+      ...(plan ? { plan } : {}),
     }).returning();
 
     // Add owner as server member.
