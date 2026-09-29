@@ -4,6 +4,7 @@ import { ALL_CHANNEL_TEAM_THRESHOLD, currentDate, referralSourceLabel, signupRol
 import type { Server as SocketServer } from "socket.io";
 import { createHash } from "node:crypto";
 import type { AgentOrchestrator } from "./agentOrchestrator.js";
+import { ONBOARDING_CONTEXT_CHANNEL_ID } from "./syntheticDeliveryTargets.js";
 import { getDb } from "../db/index.js";
 import * as agentService from "./agentService.js";
 import * as channelService from "./channelService.js";
@@ -1144,8 +1145,8 @@ export async function deliverOwnerFactsContext(
   ].filter((line): line is string => line !== null);
 
   const delivery = await agentOrchestrator.deliverMessage(onboardingAgentId, {
-    channel_id: "onboarding-context",
-    channel_name: "onboarding-context",
+    channel_id: ONBOARDING_CONTEXT_CHANNEL_ID,
+    channel_name: ONBOARDING_CONTEXT_CHANNEL_ID,
     channel_type: "channel",
     sender_id: "system",
     sender_name: "system",

@@ -205,6 +205,7 @@ import {
   type MachineConnectTraceContext,
 } from "../tracing/migrationTraceContext.js";
 import type { ComputerSourceFact } from "./computerBroadcastPolicyService.js";
+import { isServerSyntheticDeliveryTarget } from "./syntheticDeliveryTargets.js";
 import {
   MachineCatalogAuthority,
   MachineCatalogStaleError,
@@ -9409,6 +9410,7 @@ export class AgentOrchestrator extends EventEmitter {
 
   protected async canAgentAccessDeliveryTarget(agentId: string, agent: CachedAgentState, message: AgentMessage): Promise<boolean> {
     if (message.third_party_event) return true;
+    if (isServerSyntheticDeliveryTarget(message)) return true;
     try {
       const channel = await channelService.getChannel(message.channel_id);
       if (!channel || channel.serverId !== agent.serverId) {
