@@ -36,6 +36,7 @@ import { taskRouter } from "./routes/tasks";
 import { reminderRouter } from "./routes/reminders";
 import { attachmentRouter, attachmentPublicRouter } from "./routes/attachments";
 import { externalAvatarPublicRouter } from "./routes/externalAvatars";
+import { getCrossOriginResourcePolicy } from "./lib/crossOriginResourcePolicy";
 import {
   attachmentUploadRateLimitedResponse,
   createAttachmentUploadSessionRouter,
@@ -188,6 +189,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
       // Invalid URL — skip adding to CSP
     }
   }
+  const crossOriginResourcePolicy = getCrossOriginResourcePolicy();
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
@@ -195,6 +197,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
         "img-src": imgSrc,
       },
     },
+    ...(crossOriginResourcePolicy ? { crossOriginResourcePolicy: { policy: crossOriginResourcePolicy } } : {}),
   }));
 
   const corsOrigin = getWebCorsOriginOption();
