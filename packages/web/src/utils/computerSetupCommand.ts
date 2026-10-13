@@ -208,7 +208,7 @@ export function getComputerCommands(
     setup: `raft-computer setup /${slug}${setupArgs}`,
     installAndSetup: platform === "windows"
       ? null
-      : `${computerInstallCommand(deploymentEnv, options.version)} -s -- --setup /${slug}${setupArgs}`,
+      : `${computerInstallCommand(deploymentEnv, installVersion)} -s -- --setup /${slug}${setupArgs}`,
     status: "raft-computer status",
     doctor: "raft-computer doctor",
     restartService: "raft-computer restart",

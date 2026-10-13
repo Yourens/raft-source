@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { vi } from "vitest";
 
 import {
   computerInstallCommand,
@@ -378,4 +379,19 @@ test("Windows PATHEXT fix runs before the installer and is off unless enabled", 
   assert.equal(fixed, `${WINDOWS_PATHEXT_BIN_FIX}; ${install}`);
   assert.ok(fixed.endsWith("irm https://cdn.raft.build/computer/install.ps1 | iex"));
   assert.match(WINDOWS_PATHEXT_BIN_FIX, /SetEnvironmentVariable\('PATHEXT', "\$pe;\.BIN", 'User'\)/);
+});
+
+test("VITE_COMPUTER_VERSION_PIN pins both the install and the one-paste install-and-setup commands", async () => {
+  vi.stubEnv("VITE_COMPUTER_VERSION_PIN", "1.0.43");
+  vi.resetModules();
+  try {
+    const pinned = await import("../src/utils/computerSetupCommand");
+    const commands = pinned.getComputerCommands("siltok", undefined, "https://raft-api.siltok-ai.cn", { platform: "mac-linux" });
+    assert.match(commands.install, /RAFT_COMPUTER_VERSION=1\.0\.43 sh$/);
+    assert.ok(commands.installAndSetup);
+    assert.match(commands.installAndSetup, /RAFT_COMPUTER_VERSION=1\.0\.43 sh -s -- --setup \/siltok --server-url https:\/\/raft-api\.siltok-ai\.cn$/);
+  } finally {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  }
 });
